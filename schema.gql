@@ -54,10 +54,44 @@ type Species {
   properties: SpeciesProperties!
 }
 
+type PaginatedVehicle {
+  uid: String!
+  name: String!
+  url: String!
+}
+
+type VehicleProperties {
+  model: String!
+  vehicle_class: String!
+  manufacturer: String!
+  cost_in_credits: String!
+  length: String!
+  crew: String!
+  passengers: String!
+  max_atmosphering_speed: String!
+  cargo_capacity: String!
+  consumables: String!
+  films: [String!]!
+  pilots: [String!]!
+  created: String!
+  edited: String!
+  name: String!
+  url: String!
+}
+
+type Vehicle {
+  description: String!
+  uid: String!
+  properties: VehicleProperties!
+}
+
 type Query {
   films(filter: String): [Film!]!
   film(id: String!): Film!
   species(page: Int): [PaginatedSpecies!]!
   speciesByFilter(filter: String!): Species!
   speciesById(id: String!): Species!
+  vehicles(page: Int): [PaginatedVehicle!]!
+  vehicleByFilter(filter: String!): Vehicle!
+  vehicleById(id: String!): Vehicle!
 }

@@ -11,6 +11,7 @@ import { RedisCacheMiddleware } from './common/middlewares/redis-cache.middlewar
 // Features
 import { FilmsModule } from './features/films/films.module';
 import { SpeciesModule } from './features/species/species.module';
+import { VehiclesModule } from './features/vehicles/vehicles.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { SpeciesModule } from './features/species/species.module';
   }),
     HttpModule,
     FilmsModule,
-    SpeciesModule
+    SpeciesModule,
+    VehiclesModule,
   ],
 })
 export class AppModule implements NestModule {
