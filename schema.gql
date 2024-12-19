@@ -1,0 +1,31 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type FilmProperties {
+  characters: [String!]!
+  planets: [String!]!
+  starships: [String!]!
+  vehicles: [String!]!
+  species: [String!]!
+  created: String!
+  edited: String!
+  producer: String!
+  title: String!
+  episode_id: Float!
+  director: String!
+  release_date: String!
+  opening_crawl: String!
+  url: String!
+}
+
+type Film {
+  properties: FilmProperties!
+  description: String!
+  uid: String!
+}
+
+type Query {
+  films(page: Float!, filter: String): [Film!]!
+  film(id: String!): Film!
+}

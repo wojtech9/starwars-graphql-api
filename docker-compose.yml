@@ -17,9 +17,9 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - SWAPI_API_BASE_URL=https://swapi.tech/api
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - SWAPI_URL=https://swapi.dev/api
     depends_on:
       - redis
     networks:

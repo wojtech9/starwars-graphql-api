@@ -4,20 +4,42 @@ import Redis from 'ioredis';
 
 @Injectable()
 export class RedisCacheMiddleware implements NestMiddleware {
-  private redis: Redis;
+  private redis: Redis | null = null;
+  private redisAvailable = true;
 
   constructor() {
-    this.redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT, 10) || 6379,
-    });
+    try {
+      this.redis = new Redis({
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT, 10) || 6379,
+      });
+
+      this.redis.on('error', (error) => {
+        this.redisAvailable = false;
+        console.error('Redis connection error');
+      });
+
+      this.redis.ping().catch(() => {
+        this.redisAvailable = false;
+        console.error('Redis connection failed. Caching will be disabled.');
+      });
+    } catch (error) {
+      this.redisAvailable = false;
+      console.error('Error initializing Redis');
+    }
   }
 
   async use(req: Request, res: Response, next: NextFunction) {
-    const key = `${req.originalUrl}`;
-    const cached = await this.redis.get(key);
+    if (!this.redisAvailable) {
+      return next();
+    }
 
-    if (cached)  return res.json(JSON.parse(cached));
+    const key = `${req.originalUrl}`;
+    const cached = await this.redis?.get(key);
+
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
 
     let responseBody: any;
 
@@ -29,11 +51,11 @@ export class RedisCacheMiddleware implements NestMiddleware {
 
     res.on('finish', async () => {
       try {
-        if (responseBody && res.statusCode === 200) {
-          await this.redis.set(key, JSON.stringify(responseBody), 'EX', 86400);  // Cache for 24 hours
+        if (responseBody && res.statusCode === 200 && this.redisAvailable) {
+          await this.redis?.set(key, JSON.stringify(responseBody), 'EX', 86400);
         }
       } catch (error) {
-        console.error('Error caching data to Redis:', error);
+        console.error('Error caching data to Redis');
       }
     });
 
