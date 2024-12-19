@@ -15,20 +15,28 @@ export class FilmsService {
     this.swapiBaseUrl = this.configService.get<string>('SWAPI_API_BASE_URL') || 'https://swapi.tech/api';
   }
 
-  async getFilms(page: number, filter: string): Promise<Film[]> {
-    let url = `${this.swapiBaseUrl}/films/?page=${page}`;
+  async getFilms(filter: string): Promise<Film[]> {
+    let url = `${this.swapiBaseUrl}/films`;
 
-    if (filter) url += `&${filter}`;
+    if (filter) url += `?${filter}`;
 
-    const response = await firstValueFrom(this.httpService.get(url));
+    try {
+      const response = await firstValueFrom(this.httpService.get(url));
 
-    return response.data.result;
+      return response.data.result;
+    } catch (error) {
+      throw new Error('Service unavailable');
+    }
   }
 
   async getFilm(id: string): Promise<Film> {
-    const url = `${this.swapiBaseUrl}/films/${id}/`;
-    const response = await firstValueFrom(this.httpService.get(url));
+    const url = `${this.swapiBaseUrl}/films/${id}`;
+    try {
+      const response = await firstValueFrom(this.httpService.get(url));
 
-    return response.data.result;
+      return response.data.result;
+    } catch (error) {
+      throw new Error('Service unavailable');
+    }
   }
 }

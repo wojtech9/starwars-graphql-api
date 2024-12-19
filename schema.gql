@@ -25,7 +25,39 @@ type Film {
   uid: String!
 }
 
+type PaginatedSpecies {
+  uid: String!
+  name: String!
+  url: String!
+}
+
+type SpeciesProperties {
+  classification: String!
+  designation: String!
+  average_height: String!
+  average_lifespan: String!
+  hair_colors: String!
+  skin_colors: String!
+  eye_colors: String!
+  homeworld: String!
+  language: String!
+  people: [String!]!
+  created: String!
+  edited: String!
+  name: String!
+  url: String!
+}
+
+type Species {
+  description: String!
+  uid: String!
+  properties: SpeciesProperties!
+}
+
 type Query {
-  films(page: Float!, filter: String): [Film!]!
+  films(filter: String): [Film!]!
   film(id: String!): Film!
+  species(page: Int): [PaginatedSpecies!]!
+  speciesByFilter(filter: String!): Species!
+  speciesById(id: String!): Species!
 }

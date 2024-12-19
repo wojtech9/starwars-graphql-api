@@ -8,11 +8,9 @@ import { APP_FILTER } from '@nestjs/core';
 // Middlewares
 import { RedisCacheMiddleware } from './common/middlewares/redis-cache.middleware';
 
-// Filters
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-
 // Features
 import { FilmsModule } from './features/films/films.module';
+import { SpeciesModule } from './features/species/species.module';
 
 @Module({
   imports: [
@@ -24,12 +22,7 @@ import { FilmsModule } from './features/films/films.module';
   }),
     HttpModule,
     FilmsModule,
-  ],
-  providers: [
-    {
-      provide: APP_FILTER,
-      useClass: AllExceptionsFilter,
-    },
+    SpeciesModule
   ],
 })
 export class AppModule implements NestModule {

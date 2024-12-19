@@ -1,119 +1,113 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FilmsResolver } from './films.resolver';
 import { FilmsService } from './films.service';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Film } from './film.type';
-import { NotFoundException } from '../../common/exceptions/not-found.exception';
 
 describe('FilmsResolver', () => {
   let resolver: FilmsResolver;
-  let service: FilmsService;
+  let filmsService: FilmsService;
+
+  const mockFilmsService = {
+    getFilms: jest.fn(),
+    getFilm: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FilmsResolver,
+        FilmsService,
         {
           provide: FilmsService,
-          useValue: {
-            getFilms: jest.fn(),
-            getFilm: jest.fn(),
-          },
+          useValue: mockFilmsService,
         },
       ],
     }).compile();
 
     resolver = module.get<FilmsResolver>(FilmsResolver);
-    service = module.get<FilmsService>(FilmsService);
-  });
-
-  it('should be defined', () => {
-    expect(resolver).toBeDefined();
+    filmsService = module.get<FilmsService>(FilmsService);
   });
 
   describe('films', () => {
-    it('should return a list of films', async () => {
-      const filmsMock: Film[] = [
+    it('should throw BadRequestException for invalid filter (empty or only spaces)', async () => {
+      await expect(resolver.films('  ')).rejects.toThrowError(BadRequestException);
+    });
+
+    it('should throw NotFoundException if no films found', async () => {
+      mockFilmsService.getFilms.mockResolvedValue([]);
+
+      await expect(resolver.films('title=A New Hope')).rejects.toThrowError(NotFoundException);
+    });
+
+    it('should return an array of films when valid filter is provided', async () => {
+      const films: Film[] = [
         {
           properties: {
             title: 'A New Hope',
-            episode_id: 4,
-            director: 'George Lucas',
             release_date: '1977-05-25',
-            opening_crawl: 'It is a period of civil war...',
-            characters: [],
-            planets: [],
-            starships: [],
-            vehicles: [],
-            species: [],
+            producer: 'George Lucas',
+            director: 'George Lucas',
+            episode_id: 1,
+            opening_crawl: 'A long time ago in a galaxy far, far away...',
+            characters: ['Luke Skywalker', 'Han Solo'],
+            planets: ['Tatooine'],
+            starships: ['Millennium Falcon'],
+            vehicles: ['Speeder'],
+            species: ['Human'],
             created: '1977-01-01',
-            edited: '1977-01-01',
-            producer: 'Gary Kurtz',
+            edited: '1977-01-02',
             url: 'https://swapi.tech/api/films/1',
           },
-          description: 'A Star Wars Film',
+          description: 'The first film of the Star Wars saga.',
           uid: '1',
         },
       ];
 
-      jest.spyOn(service, 'getFilms').mockResolvedValue(filmsMock);
+      mockFilmsService.getFilms.mockResolvedValue(films);
 
-      const films = await resolver.films(1, 'filter=title:A New Hope');
-      expect(films.length).toBeGreaterThan(0);
-      expect(films[0].properties.title).toBe('A New Hope');
-    });
-
-    it('should throw an exception if no films are found', async () => {
-      jest.spyOn(service, 'getFilms').mockResolvedValue([]);
-
-      try {
-        await resolver.films(1, 'filter=title:Nonexistent Film');
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toBe('No films found');
-      }
+      const result = await resolver.films('title=A New Hope');
+      expect(result).toEqual(films);
     });
   });
 
   describe('film', () => {
-    it('should return a single film', async () => {
-      const filmMock: Film = {
-        properties: {
-          title: 'Return of the Jedi',
-          episode_id: 6,
-          director: 'Richard Marquand',
-          release_date: '1983-05-25',
-          opening_crawl: 'Luke Skywalker has returned...',
-          characters: [],
-          planets: [],
-          starships: [],
-          vehicles: [],
-          species: [],
-          created: '1983-01-01',
-          edited: '1983-01-01',
-          producer: 'Howard G. Kazanjian',
-          url: 'https://swapi.tech/api/films/3',
-        },
-        description: 'A Star Wars Film',
-        uid: '3',
-      };
-
-      jest.spyOn(service, 'getFilm').mockResolvedValue(filmMock);
-
-      const film = await resolver.film('3');
-      expect(film.properties.title).toBe('Return of the Jedi');
-      expect(film.properties.episode_id).toBe(6);
-      expect(film.properties.director).toBe('Richard Marquand');
+    it('should throw BadRequestException for invalid ID (empty or only spaces)', async () => {
+      await expect(resolver.film('  ')).rejects.toThrowError(BadRequestException);
     });
 
-    it('should throw an exception if no film is found', async () => {
-      jest.spyOn(service, 'getFilm').mockResolvedValue(null);
+    it('should throw NotFoundException if film not found', async () => {
+      mockFilmsService.getFilm.mockResolvedValue(null);
 
-      try {
-        await resolver.film('999');
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toBe('No film found');
-      }
+      await expect(resolver.film('invalid-id')).rejects.toThrowError(NotFoundException);
+    });
+
+    it('should return film when a valid id is provided', async () => {
+      const film: Film = {
+        properties: {
+          title: 'A New Hope',
+          release_date: '1977-05-25',
+          producer: 'George Lucas',
+          director: 'George Lucas',
+          episode_id: 1,
+          opening_crawl: 'A long time ago in a galaxy far, far away...',
+          characters: ['Luke Skywalker', 'Han Solo'],
+          planets: ['Tatooine'],
+          starships: ['Millennium Falcon'],
+          vehicles: ['Speeder'],
+          species: ['Human'],
+          created: '1977-01-01',
+          edited: '1977-01-02',
+          url: 'https://swapi.tech/api/films/1',
+        },
+        description: 'The first film of the Star Wars saga.',
+        uid: '1',
+      };
+
+      mockFilmsService.getFilm.mockResolvedValue(film);
+
+      const result = await resolver.film('1');
+      expect(result).toEqual(film);
     });
   });
 });
